@@ -36,16 +36,32 @@ fi
 
 STATIC_RELEASE_URL=
 STATIC_RELEASE_ROOTLESS_URL=
+
+# static_release_url returns the download URL for a given package and version.
+# Some releases use a different tarball name than the version number (e.g. a
+# re-release with a suffix), which is handled here.
+# Usage: static_release_url <docker|docker-rootless-extras> <version>
+static_release_url() {
+	case "$2" in
+		29.4.2)
+			echo "https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/$1-29.4.2-2.tgz"
+			;;
+		*)
+			echo "https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/$1-$2.tgz"
+			;;
+	esac
+}
+
 case "$CHANNEL" in
     "stable")
         echo "# Installing stable version ${STABLE_LATEST}"
-        STATIC_RELEASE_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-${STABLE_LATEST}.tgz"
-        STATIC_RELEASE_ROOTLESS_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-rootless-extras-${STABLE_LATEST}.tgz"
+        STATIC_RELEASE_URL=$(static_release_url docker "$STABLE_LATEST")
+        STATIC_RELEASE_ROOTLESS_URL=$(static_release_url docker-rootless-extras "$STABLE_LATEST")
         ;;
     "test")
         echo "# Installing test version ${TEST_LATEST}"
-        STATIC_RELEASE_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-${TEST_LATEST}.tgz"
-        STATIC_RELEASE_ROOTLESS_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-rootless-extras-${TEST_LATEST}.tgz"
+        STATIC_RELEASE_URL=$(static_release_url docker "$TEST_LATEST")
+        STATIC_RELEASE_ROOTLESS_URL=$(static_release_url docker-rootless-extras "$TEST_LATEST")
         ;;
     *)
         >&2 echo "Aborting because of unknown CHANNEL \"$CHANNEL\". Set \$CHANNEL to either \"stable\" or \"test\"."

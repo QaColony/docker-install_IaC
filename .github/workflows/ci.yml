@@ -14,6 +14,7 @@ jobs:
           - quay.io/centos/centos:stream9
         version:
           - "27.5"
+          - "29.4.2"
           - ""
 
     steps:
@@ -31,6 +32,14 @@ jobs:
   test-install-rootless:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      matrix:
+        channel:
+          - test
+          - stable
+        include:
+          - channel: stable
+            stable_latest: "29.4.2"
     steps:
     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
     - name: Install rootless
@@ -38,6 +47,6 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         sudo sh -c 'echo 0 > /proc/sys/kernel/apparmor_restrict_unprivileged_userns'
-        make build/test/rootless-install.sh
-        FORCE_ROOTLESS_INSTALL=1 ./build/test/rootless-install.sh
-    
+        make build/${{ matrix.channel }}/rootless-install.sh \
+          ${{ matrix.stable_latest && format('STABLE_LATEST={0}', matrix.stable_latest) || '' }}
+        FORCE_ROOTLESS_INSTALL=1 ./build/${{ matrix.channel }}/rootless-install.sh
